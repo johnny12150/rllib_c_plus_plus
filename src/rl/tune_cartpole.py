@@ -1,5 +1,7 @@
 import ray
 import torch
+import numpy as np
+import onnxruntime as ort
 import gymnasium as gym
 from loguru import logger
 from ray import tune, air
@@ -16,6 +18,8 @@ def train_model():
             "num_cpus": 1,  # number of CPUs to use per trial
             "num_gpus": 0,  # number of GPUs to use per trial
             "disable_env_checking": True,  # avoid weird shape error in env
+            "_enable_rl_module_api": False,
+            "_enable_learner_api": False,
         },
         run_config=air.RunConfig(
                         stop=stopping_criteria,
@@ -26,7 +30,7 @@ def train_model():
 
 def save_policy(result):
     """
-    Load policy and export to .pt file
+    Load policy and export to ONNX format
 
     :param result:
     :return:
@@ -38,7 +42,7 @@ def save_policy(result):
 
     ppo_algo = Algorithm.from_checkpoint(latest_checkpoint)
     policy = ppo_algo.get_policy()
-    policy.export_model("../ray_output")
+    policy.export_model("../ray_output", onnx=17)
 
 
 def create_env():
