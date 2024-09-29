@@ -16,12 +16,15 @@ public:
         // Prepare the input tensor for 'obs' (state)
         Ort::MemoryInfo memory_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
         std::vector<int64_t> obs_shape = {1, static_cast<int64_t>(state.size())};  // Assuming a batch size of 1
-        Ort::Value obs_tensor = Ort::Value::CreateTensor<float>(memory_info, const_cast<float*>(state.data()), state.size(), obs_shape.data(), obs_shape.size());
+        Ort::Value obs_tensor = Ort::Value::CreateTensor<float>(memory_info, const_cast<float*>(state.data()),
+                                                                state.size(), obs_shape.data(), obs_shape.size());
 
         // Prepare the input tensor for 'state_ins' (empty or zero-sized input)
         std::vector<int64_t> state_ins_shape = {0};  // Assuming it's an empty tensor
         std::vector<float> state_ins;  // Empty state_ins input
-        Ort::Value state_ins_tensor = Ort::Value::CreateTensor<float>(memory_info, state_ins.data(), state_ins.size(), state_ins_shape.data(), state_ins_shape.size());
+        Ort::Value state_ins_tensor = Ort::Value::CreateTensor<float>(memory_info, state_ins.data(),
+                                                                      state_ins.size(), state_ins_shape.data(),
+                                                                      state_ins_shape.size());
 
         // Get input/output names (Assuming the model has two inputs: 'obs' and 'state_ins')
         Ort::AllocatedStringPtr input_name_0 = session->GetInputNameAllocated(0, allocator);  // 'obs'
@@ -38,7 +41,8 @@ public:
         input_tensors.push_back(std::move(state_ins_tensor));  // Add 'state_ins' tensor
 
         // Run inference
-        auto output_tensors = session->Run(Ort::RunOptions{nullptr}, input_names, input_tensors.data(), input_tensors.size(), output_names, 1);
+        auto output_tensors = session->Run(Ort::RunOptions{nullptr}, input_names, input_tensors.data(),
+                                           input_tensors.size(), output_names, 1);
 
         // Get action probabilities from the output
         float* action_probs = output_tensors[0].GetTensorMutableData<float>();
