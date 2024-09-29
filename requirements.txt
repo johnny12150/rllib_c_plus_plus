@@ -8,5 +8,8 @@ scikit-image
 torch==1.13.1
 lz4
 
+# ONNX
+onnxruntime
+
 # Lint
 ruff

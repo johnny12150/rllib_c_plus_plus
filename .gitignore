@@ -1,4 +1,9 @@
 .idea/
+cpp_src/.idea/
 
 ray_results/
 ray_output/
+
+cpp_src/onnxruntime-osx-arm64-1.19.2/
+
+cpp_src/cmake-build-debug/
