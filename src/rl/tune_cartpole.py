@@ -1,12 +1,10 @@
 import ray
 from ray import tune, air
+from ray.rllib.algorithms.algorithm import Algorithm
 
 stopping_criteria = {"time_total_s": 20}
 
-
-if __name__ == "__main__":
-    ray.init()
-
+def train_model():
     tuner = tune.Tuner(
         "PPO",
         param_space={
@@ -20,4 +18,20 @@ if __name__ == "__main__":
                         stop=stopping_criteria,
                         storage_path='../ray_results',),
     )
-    results = tuner.fit()
+    return tuner.fit()
+
+
+def convert_policy(result):
+    ppo_algo = Algorithm.from_checkpoint(result.experiment_path)
+    policy = ppo_algo.get_policy()
+
+
+if __name__ == "__main__":
+    ray.init(local_mode=True)
+
+    result = train_model()
+    convert_policy(result)
+
+    ray.shutdown()
+
+    # todo load policy and export to .pt file
