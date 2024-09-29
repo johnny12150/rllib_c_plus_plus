@@ -1,5 +1,4 @@
 import ray
-import torch
 import numpy as np
 import onnxruntime as ort
 import gymnasium as gym
@@ -51,27 +50,23 @@ def create_env():
     return env, obs
 
 
-class TorchScriptPPOModel:
+class ONNXPPOModel:
     def __init__(self, model_path):
-        # Load the TorchScript model
-        try:
-            self.model = torch.jit.load(model_path)
-            self.model.eval()
-        except Exception as e:
-            logger.error(e)
+        self.model = ort.InferenceSession(model_path)
 
+    def select_action(self, state):
+        state = np.array(state, dtype=np.float32).reshape(1, -1)  # Reshape to match model input
+        ort_inputs = {'obs': state, 'state_ins': []}
+        ort_outs = self.model.run(None, ort_inputs)
+        action_probs = ort_outs[0]  # Output from the policy (action probabilities)
 
-    def compute_action(self, obs):
-        # Convert observation to a PyTorch tensor
-        obs_tensor = torch.tensor(obs, dtype=torch.float32)
-        # Use the loaded model to predict the action
-        with torch.no_grad():
-            action = self.model(obs_tensor)
-        return action.numpy()  # Convert back to numpy if required by gym environment
+        # Select the action with the highest probability
+        action = np.argmax(action_probs, axis=1).item()
+        return action
 
 
 def test_converted_model():
-    ppo_model = TorchScriptPPOModel('../ray_output/model.pt')
+    ppo_model = ONNXPPOModel('../ray_output/model.onnx')
 
     # Prepare Cartpole-v1 env to test the model
     env, obs = create_env()
@@ -80,15 +75,19 @@ def test_converted_model():
     while not done:
         logger.info(f'Action: {action_i}')
         action_i += 1
-        action = ppo_model.compute_action(obs)
+        action = ppo_model.select_action(obs)
         obs, reward, done, info, _ = env.step(action)
 
 
 if __name__ == "__main__":
+    training = False
+
     ray.init(local_mode=True)
 
-    result = train_model()
-    save_policy(result)
+    if training:
+        result = train_model()
+        save_policy(result)
+
     test_converted_model()
 
     ray.shutdown()
