@@ -22,7 +22,11 @@ def train_model():
 
 
 def convert_policy(result):
-    ppo_algo = Algorithm.from_checkpoint(result.experiment_path)
+    best_result = result.get_best_result()
+    best_checkpoint = best_result.best_checkpoints[-1][0].path
+    latest_checkpoint = best_result.checkpoint.path
+
+    ppo_algo = Algorithm.from_checkpoint(latest_checkpoint)
     policy = ppo_algo.get_policy()
 
 
@@ -30,8 +34,7 @@ if __name__ == "__main__":
     ray.init(local_mode=True)
 
     result = train_model()
+    # todo load policy and export to .pt file
     convert_policy(result)
 
     ray.shutdown()
-
-    # todo load policy and export to .pt file
