@@ -38,7 +38,7 @@ def save_policy(result):
 
     ppo_algo = Algorithm.from_checkpoint(latest_checkpoint)
     policy = ppo_algo.get_policy()
-    policy.export_model("../ray_output")  # normal torch model
+    policy.export_model("../ray_output")
 
 
 def create_env():
@@ -47,23 +47,15 @@ def create_env():
     return env, obs
 
 
-def convert_policy():
-    _, obs = create_env()
-    model = torch.load('../ray_output/model.pt')
-    traced_script_module = torch.jit.trace(model, torch.from_numpy(obs).float())
-    traced_script_module.save("model.pt")  # model that can be used by C++
-
-
 class TorchScriptPPOModel:
     def __init__(self, model_path):
         # Load the TorchScript model
         try:
             self.model = torch.jit.load(model_path)
-        except Exception:
-            convert_policy()
-            self.model = torch.jit.load(model_path)
+            self.model.eval()
+        except Exception as e:
+            logger.error(e)
 
-        self.model.eval()
 
     def compute_action(self, obs):
         # Convert observation to a PyTorch tensor
@@ -92,6 +84,7 @@ if __name__ == "__main__":
     ray.init(local_mode=True)
 
     result = train_model()
-    convert_policy(result)
+    save_policy(result)
+    test_converted_model()
 
     ray.shutdown()
