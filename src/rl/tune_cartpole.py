@@ -1,4 +1,7 @@
 import ray
+import torch
+import gymnasium as gym
+from loguru import logger
 from ray import tune, air
 from ray.rllib.algorithms.algorithm import Algorithm
 
@@ -21,7 +24,7 @@ def train_model():
     return tuner.fit()
 
 
-def convert_policy(result):
+def save_policy(result):
     """
     Load policy and export to .pt file
 
@@ -36,6 +39,13 @@ def convert_policy(result):
     ppo_algo = Algorithm.from_checkpoint(latest_checkpoint)
     policy = ppo_algo.get_policy()
     policy.export_model("../ray_output")
+    policy.export_model("../ray_output")  # normal torch model
+
+
+def create_env():
+    env = gym.make('CartPole-v1')
+    obs, _ = env.reset()
+    return env, obs
 
 
 
