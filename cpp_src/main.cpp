@@ -1,5 +1,6 @@
 #include "CartPoleENV.h"
 #include "ONNXPPOModel.h"
+#include <chrono>
 
 
 int main() {
@@ -22,8 +23,20 @@ int main() {
         std::vector<float> obs = {static_cast<float>(env.position), static_cast<float>(env.velocity),
                                   static_cast<float>(env.pole_angle), static_cast<float>(env.pole_velocity)};
 
+        // Capture the start time
+        auto start = std::chrono::high_resolution_clock::now();
+
         // Select action using the PPO model
         int action = ppo_model.select_action(obs);
+
+        // Capture the end time
+        auto end = std::chrono::high_resolution_clock::now();
+
+        // Calculate the duration in microseconds
+        std::chrono::duration<double, std::micro> duration = end - start;
+
+        // Print the duration
+        std::cout << "Time taken: " << duration.count() << " microseconds" << std::endl;
 
         // Take a step in the environment based on the action
         env.step(action);

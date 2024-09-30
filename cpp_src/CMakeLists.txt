@@ -25,5 +25,3 @@ target_link_libraries(cartpole_onnx onnxruntime)
 
 # Set any additional compile options if needed
 target_compile_options(cartpole_onnx PRIVATE -Wall -Wextra)
-
-# Include other necessary libraries or options if required
