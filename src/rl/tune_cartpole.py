@@ -67,6 +67,39 @@ class ONNXPPOModel:
         return action
 
 
+def test_original_model():
+    analysis = tune.ExperimentAnalysis("../ray_results")
+    ppo_algo = Algorithm.from_checkpoint(analysis.get_last_checkpoint().path)
+    ppo_model = ppo_algo.get_policy()
+
+    # Prepare Cartpole-v1 env to test the model
+    env, obs = create_env()
+
+    done, truncated, action_i = False, False, 0
+    while not (done or truncated):
+        logger.info(f'Action: {action_i}')
+        action_i += 1
+
+        # Capture the start time
+        start = time.time()
+
+        action, _, _ = ppo_model.compute_single_action(obs)
+
+        # Capture the end time
+        end = time.time()
+
+        # Calculate the duration in microseconds
+        duration = (end - start) * 1_000_000  # Convert seconds to microseconds
+
+        # Print the duration
+        logger.info(f"Time taken: {duration:.2f} microseconds")
+
+        # Take the action in the environment
+        obs, reward, done, truncated, info = env.step(action)
+
+    env.close()
+
+
 def test_converted_model():
     ppo_model = ONNXPPOModel('../ray_output/model.onnx')
 
@@ -106,6 +139,7 @@ if __name__ == "__main__":
         result = train_model()
         save_policy(result)
 
-    test_converted_model()
+    test_original_model()
+    # test_converted_model()
 
     ray.shutdown()
