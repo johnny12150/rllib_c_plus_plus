@@ -1,3 +1,5 @@
+import time
+
 import ray
 import numpy as np
 import onnxruntime as ort
@@ -71,12 +73,28 @@ def test_converted_model():
     # Prepare Cartpole-v1 env to test the model
     env, obs = create_env()
 
-    done, action_i = False, 0
-    while not done:
+    done, truncated, action_i = False, False, 0
+    while not (done or truncated):
         logger.info(f'Action: {action_i}')
         action_i += 1
+
+        # Capture the start time
+        start = time.time()
+
         action = ppo_model.select_action(obs)
-        obs, reward, done, info, _ = env.step(action)
+
+        # Capture the end time
+        end = time.time()
+
+        # Calculate the duration in microseconds
+        duration = (end - start) * 1_000_000  # Convert seconds to microseconds
+
+        # Print the duration
+        logger.info(f"Time taken: {duration:.2f} microseconds")
+
+        obs, reward, done, truncated, info = env.step(action)
+
+    env.close()
 
 
 if __name__ == "__main__":
