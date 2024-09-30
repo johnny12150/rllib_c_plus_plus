@@ -5,3 +5,7 @@
 
 ## ONNX C++ Runtime
 - https://github.com/microsoft/onnxruntime/releases
+
+## Profiling
+- Python/ C++ runtime takes 10 microseconds to select one action
+- Python takes 250 microseconds to select one action
